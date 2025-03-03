@@ -2,10 +2,11 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from collections import deque
+import os
 
 # Variabel global untuk menyimpan dataset
-dataset_inputs = deque(maxlen=100)  # Menyimpan input terakhir (maksimal 100 data)
-dataset_outputs = deque(maxlen=100)  # Menyimpan output terakhir (maksimal 100 data)
+dataset_inputs = deque(maxlen=1000)  # Menyimpan input terakhir (maksimal 1000 data)
+dataset_outputs = deque(maxlen=1000)  # Menyimpan output terakhir (maksimal 1000 data)
 
 def validasi_input(user_input):
     """
@@ -103,18 +104,30 @@ def prediksi_dengan_ensemble(models, input_terakhir):
         print(f"Gagal melakukan prediksi: {e}")
         return None
 
+def hapus_layar():
+    """
+    Membersihkan layar terminal.
+    """
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def main():
     print("Program Tebak 3 Angka (1-6)")
     print("Masukkan 3 angka (pisahkan dengan spasi), atau ketik 'exit' untuk keluar.")
+    print("Ketik 'hapus' untuk membersihkan layar.\n")
 
     while True:
         # Input dari pengguna
-        user_input = input("Masukkan 3 angka (1-6): ").strip().lower()
+        user_input = input(">. Masukkan 3 angka yang keluar \n(angka1-6): ").strip().lower()
 
         # Keluar dari program jika pengguna mengetik 'exit'
         if user_input == "exit":
-            print("Program dihentikan.")
+            print("Program selesai terimakasih")
             break
+
+        # Membersihkan layar jika pengguna mengetik 'hapus'
+        if user_input == "hapus":
+            hapus_layar()
+            continue
 
         # Validasi input
         if not validasi_input(user_input):
@@ -140,7 +153,12 @@ def main():
                 input_terakhir = dataset_inputs[-1]
                 prediksi = prediksi_dengan_ensemble(models, input_terakhir)
                 if prediksi is not None:
-                    print(f"Prediksi angka berikutnya: {prediksi}")
+                    jumlah = sum(prediksi)
+                    kategori = "KECIL" if jumlah <= 10 else "BESAR"
+                    print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
+                    print(f">. jumlah : {jumlah}")
+                    print(f">. kategori : {kategori}")
+                    print()
                 else:
                     print("Belum bisa menebak. Terjadi kesalahan saat prediksi.")
             else:
