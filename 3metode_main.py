@@ -7,6 +7,29 @@ from collections import deque
 dataset_inputs = deque(maxlen=100)  # Menyimpan input terakhir (maksimal 100 data)
 dataset_outputs = deque(maxlen=100)  # Menyimpan output terakhir (maksimal 100 data)
 
+def validasi_input(user_input):
+    """
+    Memvalidasi input pengguna. Input harus berupa 3 angka antara 1 dan 6.
+    """
+    try:
+        numbers = list(map(int, user_input.split()))
+        if len(numbers) != 3 or any(num < 1 or num > 6 for num in numbers):
+            return False
+        return True
+    except ValueError:
+        return False
+
+def simpan_data(input_data):
+    """
+    Menyimpan input dan output ke dataset.
+    """
+    try:
+        if len(dataset_inputs) > 0:
+            dataset_outputs.append(input_data)  # Output adalah input berikutnya
+        dataset_inputs.append(input_data)  # Input adalah data sebelumnya
+    except Exception as e:
+        print(f"Gagal menyimpan data: {e}")
+
 def latih_model_ensemble(X, y):
     """
     Melatih model ensemble untuk setiap angka (angka pertama, angka kedua, angka ketiga).
@@ -80,29 +103,6 @@ def prediksi_dengan_ensemble(models, input_terakhir):
         print(f"Gagal melakukan prediksi: {e}")
         return None
 
-def validasi_input(user_input):
-    """
-    Memvalidasi input pengguna. Input harus berupa 3 angka antara 1 dan 6.
-    """
-    try:
-        numbers = list(map(int, user_input.split()))
-        if len(numbers) != 3 or any(num < 1 or num > 6 for num in numbers):
-            return False
-        return True
-    except ValueError:
-        return False
-
-def simpan_data(input_data):
-    """
-    Menyimpan input dan output ke dataset.
-    """
-    try:
-        if len(dataset_inputs) > 0:
-            dataset_outputs.append(input_data)  # Output adalah input berikutnya
-        dataset_inputs.append(input_data)  # Input adalah data sebelumnya
-    except Exception as e:
-        print(f"Gagal menyimpan data: {e}")
-
 def main():
     print("Program Tebak 3 Angka (1-6)")
     print("Masukkan 3 angka (pisahkan dengan spasi), atau ketik 'exit' untuk keluar.")
@@ -150,4 +150,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
