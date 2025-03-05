@@ -147,14 +147,27 @@ def hapus_layar():
 
 def demo():
     """
-    Menjalankan demo dengan 15 sampel acak.
+    Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna.
     """
     print("\nMemulai demo...\n")
-    for i in range(15):  # 15 iterasi demo
+    
+    # Minta input jumlah demo dari pengguna
+    while True:
+        try:
+            jumlah_demo = int(input("Masukkan jumlah demo (minimal 11): "))
+            if jumlah_demo >= 11:
+                break
+            else:
+                print("Jumlah demo minimal 11. Silakan coba lagi.")
+        except ValueError:
+            print("Input tidak valid. Masukkan angka.")
+
+    print(f"\nMenjalankan {jumlah_demo} iterasi demo...\n")
+    for i in range(jumlah_demo):  # Jumlah iterasi sesuai input pengguna
         # Generate 3 angka acak antara 1 dan 6
         angka_acak = [random.randint(1, 6) for _ in range(3)]
         input_demo = ' '.join(map(str, angka_acak))
-        print(f"\nDemo {i+1}: Memasukkan angka acak =[{input_demo}]")
+        print(f"\nDemo {i+1}/{jumlah_demo}: Memasukkan angka acak :[{input_demo}]")
         
         # Simulasikan input pengguna
         numbers = list(map(int, input_demo.split()))
@@ -254,4 +267,4 @@ def main():
             print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
 
 if __name__ == "__main__":
-	main()
+    main()#
