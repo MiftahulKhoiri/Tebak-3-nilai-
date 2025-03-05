@@ -5,7 +5,7 @@ from collections import deque
 import os
 import logging
 
-# Setup logging
+# Setup logging untuk mencatat pesan error atau info
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Variabel global untuk menyimpan dataset
@@ -81,23 +81,49 @@ def prediksi_dengan_ensemble(models, input_terakhir):
 
 def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
     """
-    Mengevaluasi prediksi berdasarkan selisih antara nilai aktual dan prediksi.
+    Mengevaluasi prediksi berdasarkan rentang kecil (3-10) atau besar (11-18).
+    - Sempurna: Prediksi sama dengan nilai aktual.
+    - Bagus: Prediksi ±1 dari nilai aktual.
+    - Kurang Bagus: Prediksi ±2 dari nilai aktual.
+    - Buruk: Prediksi ±3 dari nilai aktual.
+    - Gagal: Prediksi di luar rentang atau selisih > 3.
     """
     global rata_rata_kesalahan
-    selisih = abs(nilai_aktual - nilai_prediksi)
-    riwayat_evaluasi.append(selisih)
-    rata_rata_kesalahan = np.mean(riwayat_evaluasi)  # Update rata-rata kesalahan
 
+    # Tentukan rentang nilai aktual
+    if 3 <= nilai_aktual <= 10:
+        rentang_aktual = "KECIL"
+    elif 11 <= nilai_aktual <= 18:
+        rentang_aktual = "BESAR"
+    else:
+        return "Gagal"  # Nilai aktual di luar rentang yang valid
+
+    # Tentukan rentang nilai prediksi
+    if 3 <= nilai_prediksi <= 10:
+        rentang_prediksi = "KECIL"
+    elif 11 <= nilai_prediksi <= 18:
+        rentang_prediksi = "BESAR"
+    else:
+        return "Gagal"  # Nilai prediksi di luar rentang yang valid
+
+    # Jika rentang aktual dan prediksi berbeda, evaluasi adalah Gagal
+    if rentang_aktual != rentang_prediksi:
+        return "Gagal"
+
+    # Hitung selisih antara nilai aktual dan prediksi
+    selisih = abs(nilai_aktual - nilai_prediksi)
+
+    # Evaluasi berdasarkan selisih
     if selisih == 0:
         return "Sempurna"
     elif selisih == 1:
-        return "Sangat Bagus"
-    elif selisih == 2:
         return "Bagus"
-    elif selisih == 3:
+    elif selisih == 2:
         return "Kurang Bagus"
+    elif selisih == 3:
+        return "Buruk"
     else:
-        return "Gagal"
+        return "Gagal"  # Selisih lebih dari 3
 
 def perbaiki_prediksi(prediksi):
     """
@@ -119,13 +145,13 @@ def hapus_layar():
 
 def main():
     print("\t # Program Tebak 3 Angka #")
-    print(" Masukkan 3 angka (pisahkan dengan spasi).\n Ketik 'hapus' untuk membersihkan layar.\n atau ketik 'exit' untuk keluar.\n")
+    print(" Masukkan 3 angka (pisahkan dengan spasi).\n Ketik 'hapus' untuk membersihkan layar.\n atau ketik 'exit/selesi' untuk keluar.\n")
 
     while True:
         user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
 
-        if user_input == "exit" or user_input == "selesai" :
-            print("Program selesai terimakasih")
+        if user_input == "exit" or user_input == "selesai":
+            print("Program selesai. Terima kasih!")
             break
 
         if user_input == "hapus":
@@ -133,7 +159,7 @@ def main():
             continue
 
         if not validasi_input(user_input):
-            print("Angka tidak benar. Masukkan 3 angka antara 1 dan 6. jangan lupa (sepasi)")
+            print("Input tidak valid. Masukkan 3 angka antara 1 dan 6, dipisahkan dengan spasi.")
             continue
 
         numbers = list(map(int, user_input.split()))
@@ -151,8 +177,8 @@ def main():
                     prediksi = perbaiki_prediksi(prediksi)  # Perbaiki prediksi berdasarkan evaluasi
                     jumlah_aktual = sum(dataset_outputs[-1])
                     jumlah_prediksi = sum(prediksi)
-                    kategori_aktual = "KECIL" if jumlah_aktual <= 10 else "BESAR"
-                    kategori_prediksi = "KECIL" if jumlah_prediksi <= 10 else "BESAR"
+                    kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
+                    kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
 
                     # Evaluasi prediksi
                     evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
@@ -164,11 +190,11 @@ def main():
                     print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
                     print()
                 else:
-                    print("\n Belum bisa menebak.\n Terjadi kesalahan saat prediksi.\n")
+                    print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
             else:
-                print("\n Belum bisa menebak.\n Terjadi kesalahan saat melatih model.\n")
+                print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
         else:
-            print("\n Belum bisa menebak.\n Butuh lebih banyak data lagi!\n")
+            print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
 
 if __name__ == "__main__":
     main()
