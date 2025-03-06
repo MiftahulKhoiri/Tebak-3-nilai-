@@ -207,6 +207,7 @@ def demo():
 
         # Jeda 5 detik
         time.sleep(5)
+        hapus_layar()
 
 def main():
     print("\t # Program Prediksi 3 Angka #")
