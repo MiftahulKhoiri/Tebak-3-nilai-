@@ -18,6 +18,10 @@ dataset_outputs = deque(maxlen=1000)  # Menyimpan output terakhir (maksimal 1000
 riwayat_evaluasi = []
 rata_rata_kesalahan = 0
 
+# Variabel global untuk menghitung prediksi berhasil dan gagal
+prediksi_berhasil = 0
+prediksi_gagal = 0
+
 def validasi_input(user_input):
     """
     Memvalidasi input pengguna. Input harus berupa 3 angka antara 1 dan 6.
@@ -90,7 +94,7 @@ def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
     - Buruk: Prediksi ±3 dari nilai aktual.
     - Gagal: Prediksi di luar rentang atau selisih > 3.
     """
-    global rata_rata_kesalahan
+    global rata_rata_kesalahan, prediksi_berhasil, prediksi_gagal
 
     # Tentukan rentang nilai aktual
     if 3 <= nilai_aktual <= 10:
@@ -98,6 +102,7 @@ def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
     elif 11 <= nilai_aktual <= 18:
         rentang_aktual = "BESAR"
     else:
+        prediksi_gagal += 1  # Tambahkan ke prediksi gagal
         return "Gagal"  # Nilai aktual di luar rentang yang valid
 
     # Tentukan rentang nilai prediksi
@@ -106,32 +111,47 @@ def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
     elif 11 <= nilai_prediksi <= 18:
         rentang_prediksi = "BESAR"
     else:
+        prediksi_gagal += 1  # Tambahkan ke prediksi gagal
         return "Gagal"  # Nilai prediksi di luar rentang yang valid
 
     # Jika rentang aktual dan prediksi berbeda, evaluasi adalah Gagal
     if rentang_aktual != rentang_prediksi:
+        prediksi_gagal += 1  # Tambahkan ke prediksi gagal
         return "Gagal"
 
     # Hitung selisih antara nilai aktual dan prediksi
-    selisih = abs(nilai_aktual - nilai_prediksi)
+    selisih = abs(nilai_prediksi - nilai_aktual)
 
     # Evaluasi berdasarkan selisih
     if selisih == 0:
+        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
         return "Sempurna"
     elif selisih == 1:
+        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
         return "Bagus"
     elif selisih == 2:
+        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
         return "Kurang Bagus"
     elif selisih == 3:
+        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
         return "Buruk"
     else:
+        prediksi_gagal += 1  # Tambahkan ke prediksi gagal
         return "Gagal"  # Selisih lebih dari 3
 
-def perbaiki_prediksi(prediksi):
+def perbaiki_prediksi(prediksi, evaluasi_terakhir):
     """
-    Menyesuaikan prediksi berdasarkan rata-rata kesalahan.
+    Menyesuaikan prediksi berdasarkan evaluasi terakhir.
+    Jika evaluasi terakhir adalah "Bagus" atau "Sempurna", prediksi tidak diubah.
+    Jika evaluasi terakhir adalah "Kurang Bagus", "Buruk", atau "Gagal", prediksi disesuaikan.
     """
     global rata_rata_kesalahan
+
+    # Jika evaluasi terakhir adalah "Bagus" atau "Sempurna", tidak perlu perbaikan
+    if evaluasi_terakhir in ["Bagus", "Sempurna"]:
+        return prediksi
+
+    # Jika rata-rata kesalahan besar, lakukan perbaikan
     if rata_rata_kesalahan > 1:  # Jika rata-rata kesalahan besar, lakukan perbaikan
         prediksi = np.clip(prediksi + np.random.randint(-1, 2, size=3), 1, 6)  # Sesuaikan prediksi
     return prediksi
@@ -155,6 +175,7 @@ def demo():
     while True:
         try:
             jumlah_demo = int(input("Masukkan jumlah demo (minimal 11): "))
+            waktu_tampil = int(input("Berapa lama ingin melihat hasil! (detik): "))
             if jumlah_demo >= 11:
                 break
             else:
@@ -167,7 +188,7 @@ def demo():
         # Generate 3 angka acak antara 1 dan 6
         angka_acak = [random.randint(1, 6) for _ in range(3)]
         input_demo = ' '.join(map(str, angka_acak))
-        print(f"\nDemo {i+1}/{jumlah_demo}: Memasukkan angka acak :[{input_demo}]")
+        print(f"\n Demo [{i+1}/{jumlah_demo}]\n >. Memasukkan angka acak :[{input_demo}]")
         
         # Simulasikan input pengguna
         numbers = list(map(int, input_demo.split()))
@@ -182,36 +203,41 @@ def demo():
                 input_terakhir = dataset_inputs[-1]
                 prediksi = prediksi_dengan_ensemble(models, input_terakhir)
                 if prediksi is not None:
-                    prediksi = perbaiki_prediksi(prediksi)  # Perbaiki prediksi berdasarkan evaluasi
                     jumlah_aktual = sum(dataset_outputs[-1])
+                    jumlah_prediksi = sum(prediksi)
+                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
+                    prediksi = perbaiki_prediksi(prediksi, evaluasi)  # Perbaiki prediksi berdasarkan evaluasi
                     jumlah_prediksi = sum(prediksi)
                     kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
                     kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
 
                     # Evaluasi prediksi
-                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
                     print("-"*35)
                     print(f">. evaluasi prediksi : {evaluasi}")
-                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}\n")
+                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
+                    print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
+                    print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
+                    
                     print(f">. Nilai terbaru yang keluar : {input_demo}")
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
                     print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
+                    
                     print("-"*35)
                 else:
-                    print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
+                    print("\n Belum bisa menebak. \n Terjadi kesalahan saat prediksi.\n")
             else:
-                print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
+                print("\n Belum bisa menebak. \n Terjadi kesalahan saat melatih model.\n")
         else:
-            print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
+            print("\n Belum bisa menebak. \n Butuh lebih banyak data lagi!\n")
 
-        # Jeda 5 detik
-        time.sleep(5)
+        # Jeda sesuai waktu yang diminta
+        time.sleep(waktu_tampil)
         hapus_layar()
 
 def main():
     print("\t # Program Prediksi 3 Angka #")
-    print(" Masukkan 3 angka (pisahkan dengan spasi).\n Ketik 'hapus' untuk membersihkan layar.\n Ketik 'demo' untuk menjalankan demo.\n atau ketik 'exit/selesi' untuk keluar.\n")
+    print(" Masukkan nilai untuk mulai:\n Ketik 'demo' untuk menjalankan demo.\n Ketik 'hapus' untuk membersihkan layar.\n atau ketik 'exit/selesi' untuk keluar.\n")
 
     while True:
         user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
@@ -244,21 +270,25 @@ def main():
                 input_terakhir = dataset_inputs[-1]
                 prediksi = prediksi_dengan_ensemble(models, input_terakhir)
                 if prediksi is not None:
-                    prediksi = perbaiki_prediksi(prediksi)  # Perbaiki prediksi berdasarkan evaluasi
                     jumlah_aktual = sum(dataset_outputs[-1])
+                    jumlah_prediksi = sum(prediksi)
+                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
+                    prediksi = perbaiki_prediksi(prediksi, evaluasi)  # Perbaiki prediksi berdasarkan evaluasi
                     jumlah_prediksi = sum(prediksi)
                     kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
                     kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
 
                     # Evaluasi prediksi
-                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
                     print("-"*35)
                     print(f">. evaluasi prediksi : {evaluasi}")
-                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}\n")
+                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
+                    print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
+                    print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
+                    print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
                     print(f">. Nilai terbaru yang keluar : {user_input}")
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
-                    print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
+                    
                     print("-"*35)
                 else:
                     print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
@@ -268,4 +298,4 @@ def main():
             print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
 
 if __name__ == "__main__":
-    main()#
+    main()
