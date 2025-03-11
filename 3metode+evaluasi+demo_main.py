@@ -167,7 +167,7 @@ def hapus_layar():
 
 def demo():
     """
-    Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna.
+    Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna.dan waktu jeda untuk melihat hasil prediksi.
     """
     print("\nMemulai demo...\n")
     
@@ -218,10 +218,11 @@ def demo():
                     print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
                     print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
                     
-                    print(f">. Nilai terbaru yang keluar : {input_demo}")
-                    print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
                     print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
+                    print(f">. Nilai terbaru yang keluar : {input_demo}")
+                    print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
+                    
                     
                     print("-"*35)
                 else:
@@ -282,12 +283,12 @@ def main():
                     print("-"*35)
                     print(f">. evaluasi prediksi : {evaluasi}")
                     print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
-                    print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
                     print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
                     print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
                     print(f">. Nilai terbaru yang keluar : {user_input}")
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
+                    print(f">. Jumlah prediksi: {jumlah_prediksi}({kategori_prediksi})")
                     
                     print("-"*35)
                 else:
