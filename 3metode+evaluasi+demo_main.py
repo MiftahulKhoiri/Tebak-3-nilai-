@@ -87,12 +87,12 @@ def prediksi_dengan_ensemble(models, input_terakhir):
 
 def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
     """
-    Mengevaluasi prediksi berdasarkan rentang kecil (3-10) atau besar (11-18).
-    - Sempurna: Prediksi sama dengan nilai aktual.
-    - Bagus: Prediksi ±1 dari nilai aktual.
-    - Kurang Bagus: Prediksi ±2 dari nilai aktual.
-    - Buruk: Prediksi ±3 dari nilai aktual.
-    - Gagal: Prediksi di luar rentang atau selisih > 3.
+    Mengevaluasi prediksi berdasarkan kriteria:
+    - Sempurna: Prediksi sama persis dengan nilai aktual.
+    - Bagus: Prediksi meleset ±1 dari nilai aktual.
+    - Kurang Bagus: Prediksi meleset ±2 dari nilai aktual.
+    - Buruk: Prediksi meleset ±3 dari nilai aktual.
+    - Gagal: Prediksi meleset lebih dari ±3 atau rentang tidak sesuai.
     """
     global rata_rata_kesalahan, prediksi_berhasil, prediksi_gagal
 
@@ -119,25 +119,25 @@ def evaluasi_prediksi(nilai_aktual, nilai_prediksi):
         prediksi_gagal += 1  # Tambahkan ke prediksi gagal
         return "Gagal"
 
-    # Hitung selisih antara nilai aktual dan prediksi
-    selisih = abs(nilai_prediksi - nilai_aktual)
+    # Hitung selisih (prediksi - nilai_aktual)
+    selisih = nilai_prediksi - nilai_aktual
 
     # Evaluasi berdasarkan selisih
     if selisih == 0:
-        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
+        prediksi_berhasil += 1  # Prediksi sama persis dengan nilai aktual
         return "Sempurna"
-    elif selisih == 1:
-        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
+    elif abs(selisih) == 1:  # Toleransi ±1
+        prediksi_berhasil += 1
         return "Bagus"
-    elif selisih == 2:
-        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
+    elif abs(selisih) == 2:  # Toleransi ±2
+        prediksi_berhasil += 1
         return "Kurang Bagus"
-    elif selisih == 3:
-        prediksi_berhasil += 1  # Tambahkan ke prediksi berhasil
+    elif abs(selisih) == 3:  # Toleransi ±3
+        prediksi_berhasil += 1
         return "Buruk"
     else:
-        prediksi_gagal += 1  # Tambahkan ke prediksi gagal
-        return "Gagal"  # Selisih lebih dari 3
+        prediksi_gagal += 1  # Prediksi meleset lebih dari ±3
+        return "Gagal"
 
 def perbaiki_prediksi(prediksi, evaluasi_terakhir):
     """
@@ -165,9 +165,69 @@ def hapus_layar():
     except Exception as e:
         logging.error(f"Gagal membersihkan layar: {e}")
 
+def prediksi():
+    """
+    Fungsi untuk melakukan prediksi berdasarkan input pengguna.
+    """
+    print("\nMemulai prediksi...\n")
+    while True:
+        user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
+
+        if user_input in ["exit","setop","selesai"]:
+            print("Keluar dari mode prediksi.")
+            break
+
+        if user_input in ["hapus","clear","bersihkan","kosong"]:
+            hapus_layar()
+            continue
+
+        if not validasi_input(user_input):
+            print("Input tidak valid. Masukkan 3 angka antara 1 dan 6, dipisahkan dengan spasi.")
+            continue
+
+        numbers = list(map(int, user_input.split()))
+        simpan_data(numbers)
+
+        if len(dataset_inputs) >= 10:
+            X = np.array(list(dataset_inputs)[:-1])  # Semua data kecuali yang terakhir
+            y = np.array(list(dataset_outputs))  # Output adalah data berikutnya
+
+            models = latih_model_ensemble(X, y)
+            if models is not None:
+                input_terakhir = dataset_inputs[-1]
+                prediksi = prediksi_dengan_ensemble(models, input_terakhir)
+                if prediksi is not None:
+                    jumlah_aktual = sum(dataset_outputs[-1])
+                    jumlah_prediksi = sum(prediksi)
+                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
+                    prediksi = perbaiki_prediksi(prediksi, evaluasi)  # Perbaiki prediksi berdasarkan evaluasi
+                    jumlah_prediksi = sum(prediksi)
+                    kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
+                    kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
+
+                    # Evaluasi prediksi
+                    print("-"*35)
+                    print(f">. evaluasi prediksi : {evaluasi}")
+                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
+                    print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
+                    print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
+                    print(f">. Nilai terbaru yang keluar : {user_input}")
+                    print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
+                    print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
+                    print(f">. Jumlah prediksi: {jumlah_prediksi}({kategori_prediksi})")
+
+                    print("-"*35)
+                else:
+                    print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
+            else:
+                print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
+        else:
+            print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
+
 def demo():
     """
-    Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna.dan waktu jeda untuk melihat hasil prediksi.
+    Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna dan waktu jeda untuk melihat hasil prediksi.
+    Setelah selesai, kembali ke menu utama.
     """
     print("\nMemulai demo...\n")
 
@@ -223,7 +283,6 @@ def demo():
                     print(f">. Nilai terbaru yang keluar : {input_demo}")
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
 
-
                     print("-"*35)
                 else:
                     print("\n Belum bisa menebak. \n Terjadi kesalahan saat prediksi.\n")
@@ -236,86 +295,32 @@ def demo():
         time.sleep(waktu_tampil)
         hapus_layar()
 
-def prediksi():
-    """
-    Fungsi untuk melakukan prediksi berdasarkan input pengguna.
-    """
-    print("\nMemulai prediksi...\n")
-    while True:
-        user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
-
-        if user_input == "exit" or user_input == "selesai":
-            print("Keluar dari mode prediksi.")
-            break
-
-        if user_input == "hapus":
-            hapus_layar()
-            continue
-
-        if not validasi_input(user_input):
-            print("Input tidak valid. Masukkan 3 angka antara 1 dan 6, dipisahkan dengan spasi.")
-            continue
-
-        numbers = list(map(int, user_input.split()))
-        simpan_data(numbers)
-
-        if len(dataset_inputs) >= 10:
-            X = np.array(list(dataset_inputs)[:-1])  # Semua data kecuali yang terakhir
-            y = np.array(list(dataset_outputs))  # Output adalah data berikutnya
-
-            models = latih_model_ensemble(X, y)
-            if models is not None:
-                input_terakhir = dataset_inputs[-1]
-                prediksi = prediksi_dengan_ensemble(models, input_terakhir)
-                if prediksi is not None:
-                    jumlah_aktual = sum(dataset_outputs[-1])
-                    jumlah_prediksi = sum(prediksi)
-                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
-                    prediksi = perbaiki_prediksi(prediksi, evaluasi)  # Perbaiki prediksi berdasarkan evaluasi
-                    jumlah_prediksi = sum(prediksi)
-                    kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
-                    kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
-
-                    # Evaluasi prediksi
-                    print("-"*35)
-                    print(f">. evaluasi prediksi : {evaluasi}")
-                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
-                    print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
-                    print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
-                    print(f">. Nilai terbaru yang keluar : {user_input}")
-                    print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
-                    print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
-                    print(f">. Jumlah prediksi: {jumlah_prediksi}({kategori_prediksi})")
-
-                    print("-"*35)
-                else:
-                    print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
-            else:
-                print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
-        else:
-            print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
+    # Tampilkan pesan demo selesai
+    print("\nDemo selesai. Kembali ke menu utama...\n")
+    time.sleep(waktu_tampil)  # Jeda 2 detik sebelum kembali ke menu utama
+    hapus_layar()
 
 def main():
     """
     Fungsi utama untuk menampilkan menu awal dan memilih antara prediksi atau demo.
     """
     print("\t # Program Prediksi 3 Angka #")
-    
+    print(" Pilih opsi:")
+    print(" 1. Prediksi")
+    print(" 2. Demo")
+    print(" 3. Exit")
 
     while True:
-     print(" Pilih opsi:")
-     print(" 1. Prediksi")
-     print(" 2. Demo")
-     print(" 3. Exit")
-     pilihan = input(">.Masukkan pilihan (1/2/3): ").strip()
-     if pilihan == "1":
+        pilihan = input(">.Masukkan pilihan (1/2/3): ").strip().lower()  # Konversi ke lowercase untuk fleksibilitas
+
+        if pilihan in ["prediksi", "1"]:  # Periksa apakah pilihan adalah "prediksi" atau "1"
             prediksi()
-     elif pilihan == "2":
+        elif pilihan in ["demo", "2"]:  # Periksa apakah pilihan adalah "demo" atau "2"
             demo()
-     elif pilihan == "3":
+        elif pilihan in ["exit", "3", "selesai"]:  # Periksa apakah pilihan adalah "exit", "3", atau "selesai"
             print("Program selesai. Terima kasih!")
             break
-     else:
+        else:
             print("Pilihan tidak valid. Silakan masukkan 1, 2, atau 3.")
 
 if __name__ == "__main__":
