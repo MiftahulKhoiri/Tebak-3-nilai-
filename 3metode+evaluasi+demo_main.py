@@ -173,7 +173,7 @@ def prediksi():
     while True:
         user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
 
-        if user_input in ["exit","setop","selesai"]:
+        if user_input in ["exit","stop","selesai","berhenti"]:
             print("Keluar dari mode prediksi.")
             break
 
@@ -244,11 +244,15 @@ def demo():
             print("Input tidak valid. Masukkan angka.")
 
     print(f"\nMenjalankan {jumlah_demo} iterasi demo...\n")
+
+    # Variabel untuk menyimpan prediksi sebelumnya
+    prediksi_sebelumnya = None
+
     for i in range(jumlah_demo):  # Jumlah iterasi sesuai input pengguna
         # Generate 3 angka acak antara 1 dan 6
         angka_acak = [random.randint(1, 6) for _ in range(3)]
         input_demo = ' '.join(map(str, angka_acak))
-        print(f"\n Demo [{i+1}/{jumlah_demo}]\n >. Memasukkan angka acak :[{input_demo}]")
+        print(f"\n Menjalankan Demo [{i+1}/{jumlah_demo}]\n >. Memasukkan angka acak :[{input_demo}]")
 
         # Simulasikan input pengguna
         numbers = list(map(int, input_demo.split()))
@@ -263,33 +267,36 @@ def demo():
                 input_terakhir = dataset_inputs[-1]
                 prediksi = prediksi_dengan_ensemble(models, input_terakhir)
                 if prediksi is not None:
-                    jumlah_aktual = sum(dataset_outputs[-1])
-                    jumlah_prediksi = sum(prediksi)
-                    evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi)
-                    prediksi = perbaiki_prediksi(prediksi, evaluasi)  # Perbaiki prediksi berdasarkan evaluasi
-                    jumlah_prediksi = sum(prediksi)
-                    kategori_aktual = "KECIL" if 3 <= jumlah_aktual <= 10 else "BESAR"
-                    kategori_prediksi = "KECIL" if 3 <= jumlah_prediksi <= 10 else "BESAR"
+                    # Jika ada prediksi sebelumnya, evaluasi dengan nilai aktual
+                    if prediksi_sebelumnya is not None:
+                        jumlah_aktual = sum(numbers)  # Jumlah angka acak yang baru dihasilkan
+                        jumlah_prediksi_sebelumnya = sum(prediksi_sebelumnya)
+                        evaluasi = evaluasi_prediksi(jumlah_aktual, jumlah_prediksi_sebelumnya)
 
-                    # Evaluasi prediksi
-                    print("-"*35)
-                    print(f">. evaluasi prediksi : {evaluasi}")
-                    print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
-                    print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
-                    print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
+                        # Tampilkan hasil evaluasi
+                        print("-" * 35)
+                        print(f">. Evaluasi Prediksi Sebelumnya: {evaluasi}")
+                        print(f">. Rata-rata Kesalahan: {rata_rata_kesalahan:.2f}")
+                        print(f">. Prediksi Berhasil: {prediksi_berhasil} kali")
+                        print(f">. Prediksi Gagal: {prediksi_gagal} kali\n")
+                        print(f">. Nilai terbaru yang keluar : {input_demo}")
+                        print(f">. Jumlah aktual : {jumlah_aktual} ({'KECIL' if 3 <= jumlah_aktual <= 10 else 'BESAR'})")
+                        print(f">. Prediksi sebelumnya : {' '.join(map(str, prediksi_sebelumnya))}")
+                        print(f">. Jumlah prediksi sebelumnya: {jumlah_prediksi_sebelumnya} ({'KECIL' if 3 <= jumlah_prediksi_sebelumnya <= 10 else 'BESAR'})")
+                        print("-" * 35)
 
-                    print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
-                    print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
-                    print(f">. Nilai terbaru yang keluar : {input_demo}")
-                    print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
+                    # Simpan prediksi saat ini untuk dievaluasi di iterasi berikutnya
+                    prediksi_sebelumnya = prediksi
 
-                    print("-"*35)
+                    # Tampilkan prediksi selanjutnya
+                    print(f">. Prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
+                    print(f">. Jumlah prediksi: {sum(prediksi)} ({'KECIL' if 3 <= sum(prediksi) <= 10 else 'BESAR'})")
                 else:
-                    print("\n Belum bisa menebak. \n Terjadi kesalahan saat prediksi.\n")
+                    print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
             else:
-                print("\n Belum bisa menebak. \n Terjadi kesalahan saat melatih model.\n")
+                print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
         else:
-            print("\n Belum bisa menebak. \n Butuh lebih banyak data lagi!\n")
+            print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
 
         # Jeda sesuai waktu yang diminta
         time.sleep(waktu_tampil)
@@ -297,27 +304,29 @@ def demo():
 
     # Tampilkan pesan demo selesai
     print("\nDemo selesai. Kembali ke menu utama...\n")
-    time.sleep(waktu_tampil)  # Jeda 2 detik sebelum kembali ke menu utama
+    time.sleep(waktu_tampil)  # Jeda sebelum kembali ke menu utama
     hapus_layar()
 
 def main():
     """
     Fungsi utama untuk menampilkan menu awal dan memilih antara prediksi atau demo.
     """
+    print("="*43)
     print("\t # Program Prediksi 3 Angka #")
-    print(" Pilih opsi:")
-    print(" 1. Prediksi")
-    print(" 2. Demo")
-    print(" 3. Exit")
-
+    print("="*43,"\n")
+   
     while True:
-        pilihan = input(">.Masukkan pilihan (1/2/3): ").strip().lower()  # Konversi ke lowercase untuk fleksibilitas
+        print(" [opsi pilihan]:")
+        print(" 1.prediksi")
+        print(" 2.demo")
+        print(" 3.Exit")
+        pilihan = input(">.Masukkan pilihan anda (1/2/3): ").strip().lower()  # Konversi ke lowercase untuk fleksibilitas
 
         if pilihan in ["prediksi", "1"]:  # Periksa apakah pilihan adalah "prediksi" atau "1"
             prediksi()
         elif pilihan in ["demo", "2"]:  # Periksa apakah pilihan adalah "demo" atau "2"
             demo()
-        elif pilihan in ["exit", "3", "selesai"]:  # Periksa apakah pilihan adalah "exit", "3", atau "selesai"
+        elif pilihan in ["exit", "3", "selesai","stop"]:  # Periksa apakah pilihan adalah "exit", "3", atau "selesai"
             print("Program selesai. Terima kasih!")
             break
         else:
