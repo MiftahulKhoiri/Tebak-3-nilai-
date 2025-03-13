@@ -170,7 +170,7 @@ def demo():
     Menjalankan demo dengan jumlah iterasi yang ditentukan oleh pengguna.dan waktu jeda untuk melihat hasil prediksi.
     """
     print("\nMemulai demo...\n")
-    
+
     # Minta input jumlah demo dari pengguna
     while True:
         try:
@@ -189,7 +189,7 @@ def demo():
         angka_acak = [random.randint(1, 6) for _ in range(3)]
         input_demo = ' '.join(map(str, angka_acak))
         print(f"\n Demo [{i+1}/{jumlah_demo}]\n >. Memasukkan angka acak :[{input_demo}]")
-        
+
         # Simulasikan input pengguna
         numbers = list(map(int, input_demo.split()))
         simpan_data(numbers)
@@ -217,13 +217,13 @@ def demo():
                     print(f">. rata-rata kesalahan : {rata_rata_kesalahan:.2f}")
                     print(f">. Prediksi berhasil: {prediksi_berhasil} kali")
                     print(f">. Prediksi gagal: {prediksi_gagal} kali\n")
-                    
+
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
                     print(f">. jumlah prediksi : {jumlah_prediksi} ({kategori_prediksi})")
                     print(f">. Nilai terbaru yang keluar : {input_demo}")
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
-                    
-                    
+
+
                     print("-"*35)
                 else:
                     print("\n Belum bisa menebak. \n Terjadi kesalahan saat prediksi.\n")
@@ -236,23 +236,20 @@ def demo():
         time.sleep(waktu_tampil)
         hapus_layar()
 
-def main():
-    print("\t # Program Prediksi 3 Angka #")
-    print(" Masukkan nilai untuk mulai:\n Ketik 'demo' untuk menjalankan demo.\n Ketik 'hapus' untuk membersihkan layar.\n atau ketik 'exit/selesi' untuk keluar.\n")
-
+def prediksi():
+    """
+    Fungsi untuk melakukan prediksi berdasarkan input pengguna.
+    """
+    print("\nMemulai prediksi...\n")
     while True:
         user_input = input(">.Masukkan 3 angka yang keluar \n (angka1-6): ").strip().lower()
 
         if user_input == "exit" or user_input == "selesai":
-            print("Program selesai. Terima kasih!")
+            print("Keluar dari mode prediksi.")
             break
 
         if user_input == "hapus":
             hapus_layar()
-            continue
-
-        if user_input == "demo":
-            demo()
             continue
 
         if not validasi_input(user_input):
@@ -289,7 +286,7 @@ def main():
                     print(f">. jumlah aktual : {jumlah_aktual} ({kategori_aktual})")
                     print(f">. prediksi angka keluar berikutnya : {' '.join(map(str, prediksi))}")
                     print(f">. Jumlah prediksi: {jumlah_prediksi}({kategori_prediksi})")
-                    
+
                     print("-"*35)
                 else:
                     print("\n Belum bisa menebak. Terjadi kesalahan saat prediksi.\n")
@@ -297,6 +294,29 @@ def main():
                 print("\n Belum bisa menebak. Terjadi kesalahan saat melatih model.\n")
         else:
             print("\n Belum bisa menebak. Butuh lebih banyak data lagi!\n")
+
+def main():
+    """
+    Fungsi utama untuk menampilkan menu awal dan memilih antara prediksi atau demo.
+    """
+    print("\t # Program Prediksi 3 Angka #")
+    
+
+    while True:
+     print(" Pilih opsi:")
+     print(" 1. Prediksi")
+     print(" 2. Demo")
+     print(" 3. Exit")
+     pilihan = input(">.Masukkan pilihan (1/2/3): ").strip()
+     if pilihan == "1":
+            prediksi()
+     elif pilihan == "2":
+            demo()
+     elif pilihan == "3":
+            print("Program selesai. Terima kasih!")
+            break
+     else:
+            print("Pilihan tidak valid. Silakan masukkan 1, 2, atau 3.")
 
 if __name__ == "__main__":
     main()
